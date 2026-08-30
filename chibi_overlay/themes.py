@@ -355,7 +355,7 @@ def register(t: Theme) -> None:
 # ===================================================================
 
 
-# ---- 1. INK — Brutalist monochrome, sharp flat edges ----
+# ---- 1. DARK — Brutalist monochrome, sharp flat edges ----
 def _ink() -> Theme:
     """Monochrome brutalist: ultra-flat, sharp 6px corners, thick borders, zero FX."""
     p = ThemePanel(
@@ -380,7 +380,7 @@ def _ink() -> Theme:
     )
     ty = ThemeTypography(weight=600, weight_bold=700, letter_spacing=0.3)
     return Theme(
-        id="ink", name="Ink", description="Brutalist monochrome",
+        id="dark", name="Dark", description="Brutalist monochrome",
         panel=p, key=k, effects=ef,
         radius=ThemeRadius(xs=3, sm=4, md=6, lg=8, xl=10),
         typography=ty, min_key_font=8, max_key_font=14,
@@ -472,9 +472,42 @@ def _frost() -> Theme:
     )
     tr = ThemeTypography(size_base=10, size_md=10, size_lg=11)
     return Theme(
-        id="frost", name="Frost", description="Frosted ice glass",
+        id="ios", name="iOS Fluid", description="Frosted ice glass",
         panel=p, key=k, effects=ef,
         radius=ThemeRadius(xs=8, sm=10, md=14, lg=18, xl=20),
+        typography=tr, min_key_font=8, max_key_font=14,
+    )
+
+
+# ---- 4b. ICE — Pure frosted crystal, cold blue, maximum clarity ----
+def _ice() -> Theme:
+    """Ice: translucent crystal caps with cold blue glow and crisp sheen."""
+    p = ThemePanel(
+        bg="#0a1824", surface="#cfeefc20", border="#d8f4ff50",
+        text="#0a1420", text_muted="#2a5070", accent="#9fd8ff",
+        radius=14, padding=12,
+    )
+    k = _mk_key("glass", height=5, bevel=1, radius=20, border_width=1, accent_bar=False)
+    top = "#d4ecff70"
+    bottom = "#a8d4f020"
+    border = "#e4f6ff60"
+    glow = "#9fd8ff"
+    k.normal, k.hover, k.pressed, k.selected, k.disabled = _derive_states(
+        top, bottom, border, None, glow, is_glass=True
+    )
+    ef = ThemeEffects(
+        shadow=ThemeShadow(True, "#00000022", 0, 2, 10, 0),
+        glow=ThemeGlow(True, glow, 12, 0, 0.55),
+        sheen=True, sheen_color="#ffffff40",
+        inner_highlight=True, inner_highlight_color="#ffffff28",
+        sparkles=True,
+        blur_hint=10.0,
+    )
+    tr = ThemeTypography(size_base=10, size_md=10, size_lg=11)
+    return Theme(
+        id="ice", name="Ice", description="Crystal frosted glass",
+        panel=p, key=k, effects=ef,
+        radius=ThemeRadius(xs=8, sm=10, md=16, lg=20, xl=24),
         typography=tr, min_key_font=8, max_key_font=14,
     )
 
@@ -652,7 +685,7 @@ def _rose_gold() -> Theme:
         blur_hint=6.0,
     )
     return Theme(
-        id="rose_gold", name="Rose Gold", description="Luxury warm glass",
+        id="rose", name="Rose Gold", description="Luxury warm glass",
         panel=p, key=k, effects=ef,
         radius=ThemeRadius(xs=7, sm=9, md=12, lg=14, xl=18),
     )
@@ -772,7 +805,7 @@ def _forest() -> Theme:
         sheen=False, sparkles=False,
     )
     return Theme(
-        id="forest", name="Forest", description="Organic earth tones",
+        id="nature", name="Forest", description="Organic earth tones",
         panel=p, key=k, effects=ef,
         radius=ThemeRadius(xs=5, sm=6, md=8, lg=10, xl=12),
     )
@@ -905,7 +938,7 @@ def _glass() -> Theme:
 # Register all themes
 # ===================================================================
 for _fn in (
-    _ink, _neon, _midnight, _frost, _ember, _ocean, _sakura, _candy,
+    _ink, _neon, _midnight, _ice, _frost, _ember, _ocean, _sakura, _candy,
     _mint, _rose_gold, _cyber, _lavender, _aurora, _forest, _mono,
     _retro, _catcafe, _glass,
 ):
@@ -974,7 +1007,7 @@ except Exception as ex:
 
 def get_key_theme(name: str) -> Dict[str, Any]:
     """Return a flat dict with backward-compat keys for settings_dialog."""
-    t = THEMES.get(name) or THEMES.get("dark") or THEMES.get("ink")
+    t = THEMES.get(name) or THEMES.get("dark") or (next(iter(THEMES.values())) if THEMES else _ink())
     if not t:
         t = next(iter(THEMES.values())) if THEMES else _ink()
     d = t.to_dict()
@@ -1005,9 +1038,9 @@ def key_theme_names() -> list[str]:
     """Ordered list of theme IDs for the picker UI."""
     keys = list(THEMES.keys())
     pref = [
-        "ink", "neon", "midnight", "frost", "ember", "ocean", "sakura",
-        "candy", "mint", "rose_gold", "cyber", "lavender", "aurora",
-        "forest", "monochrome", "retro", "cat_cafe", "glass",
+        "dark", "neon", "midnight", "ios", "ice", "ember", "ocean", "sakura",
+        "candy", "mint", "rose", "cyber", "lavender", "aurora",
+        "nature", "monochrome", "retro", "cat_cafe", "glass",
     ]
     out = [k for k in pref if k in keys]
     for k in keys:
@@ -1017,7 +1050,7 @@ def key_theme_names() -> list[str]:
 
 
 def get_theme(name: str) -> Theme:
-    return THEMES.get(name) or THEMES.get("ink") or (next(iter(THEMES.values())) if THEMES else _ink())
+    return THEMES.get(name) or THEMES.get("dark") or (next(iter(THEMES.values())) if THEMES else _ink())
 
 
 def theme_names() -> list[str]:
