@@ -461,7 +461,7 @@ class SettingsWindow(FramelessWindow):
         sv.addWidget(sep)
         self._nav = QButtonGroup(self)
         self._nav.setExclusive(True)
-        nav_items = ["general", "character", "keyboard", "mouse", "appearance", "profiles", "advanced"]
+        nav_items = ["general", "character", "keyboard", "mouse", "appearance", "mouse_overlay", "gamepad", "websocket", "profiles", "presets", "advanced"]
         for key in nav_items:
             b = _NavButton(key.capitalize(), key)
             self._nav.addButton(b)
@@ -520,20 +520,22 @@ class SettingsWindow(FramelessWindow):
     def _make_page(self, key):
         page = QWidget()
         v = QVBoxLayout(page); v.setContentsMargins(28, 24, 28, 24); v.setSpacing(16)
-        if key == "character":
-            self._build_character(v)
-        elif key == "keyboard":
-            self._build_keyboard(v)
-        elif key == "mouse":
-            self._build_mouse(v)
-        elif key == "appearance":
-            self._build_appearance(v)
-        elif key == "general":
-            self._build_general(v)
-        elif key == "profiles":
-            self._build_profiles(v)
-        elif key == "advanced":
-            self._build_advanced(v)
+        builders = {
+            "general": self._build_general,
+            "character": self._build_character,
+            "keyboard": self._build_keyboard,
+            "mouse": self._build_mouse,
+            "appearance": self._build_appearance,
+            "mouse_overlay": self._build_mouse_overlay,
+            "gamepad": self._build_gamepad,
+            "websocket": self._build_websocket,
+            "profiles": self._build_profiles,
+            "presets": self._build_presets,
+            "advanced": self._build_advanced,
+        }
+        builder = builders.get(key)
+        if builder:
+            builder(v)
         v.addStretch()
         return page
 
@@ -843,6 +845,202 @@ class SettingsWindow(FramelessWindow):
         danger.clicked.connect(self._reset_layout)
         f2.addRow("Danger zone", danger)
         v.addWidget(c2)
+
+    # ---- mouse overlay (cursor movement visualization) ----
+    def _build_mouse_overlay(self, v):
+        self._page_title(v, "Mouse Overlay", "Cursor movement visualization — trail, direction, deadzone")
+
+        # Enable toggle
+        c = self._card()
+        f = QFormLayout(c); f.setContentsMargins(20, 18, 20, 18); f.setSpacing(14)
+        self.cb_mouse_ov = self._check("Show mouse overlay", False, self._toggle_mouse_overlay)
+        f.addRow(self.cb_mouse_ov)
+        v.addWidget(c)
+
+        # Visual settings
+        c2 = self._card()
+        f2 = QFormLayout(c2); f2.setContentsMargins(20, 18, 20, 18); f2.setSpacing(12)
+        self.sl_mo_sens = self._slider(100, lo=10, hi=300, conn=self._apply_mouse_sensitivity)
+        self.sl_mo_trail = self._slider(20, lo=5, hi=50, conn=self._apply_mouse_trail)
+        self.sl_mo_deadzone = self._slider(50, lo=10, hi=200, conn=self._apply_mouse_deadzone)
+        f2.addRow("Sensitivity", self.sl_mo_sens)
+        f2.addRow("Trail length", self.sl_mo_trail)
+        f2.addRow("Deadzone radius", self.sl_mo_deadzone)
+
+        self.cb_mo_trail = self._check("Show trail", True, self._apply_mouse_visual)
+        self.cb_mo_arrow = self._check("Show direction arrow", True, self._apply_mouse_visual)
+        self.cb_mo_deadzone_show = self._check("Show deadzone circle", True, self._apply_mouse_visual)
+        f2.addRow(self.cb_mo_trail)
+        f2.addRow(self.cb_mo_arrow)
+        f2.addRow(self.cb_mo_deadzone_show)
+        v.addWidget(c2)
+
+        # Preview
+        cp = self._card()
+        pl = QVBoxLayout(cp); pl.setContentsMargins(18, 14, 18, 14); pl.setSpacing(8)
+        pl.addWidget(self._section("Preview"))
+        from .mouse_overlay import MouseOverlay as MO
+        self._mouse_ov_preview = MO()
+        self._mouse_ov_preview.setFixedSize(200, 200)
+        self._mouse_ov_preview.show()
+        pl.addWidget(self._mouse_ov_preview, 0, Qt.AlignCenter)
+        v.addWidget(cp)
+
+    # ---- gamepad overlay ----
+    def _build_gamepad(self, v):
+        self._page_title(v, "Gamepad", "Gamepad button + stick visualization")
+
+        c = self._card()
+        f = QFormLayout(c); f.setContentsMargins(20, 18, 20, 18); f.setSpacing(14)
+        self.cb_gp_ov = self._check("Show gamepad overlay", False, self._toggle_gamepad_overlay)
+        f.addRow(self.cb_gp_ov)
+        v.addWidget(c)
+
+        # Preview
+        cp = self._card()
+        pl = QVBoxLayout(cp); pl.setContentsMargins(18, 14, 18, 14); pl.setSpacing(8)
+        pl.addWidget(self._section("Preview"))
+        from .gamepad_overlay import GamepadOverlay as GO
+        self._gp_preview = GO()
+        self._gp_preview.setFixedSize(250, 250)
+        self._gp_preview.show()
+        pl.addWidget(self._gp_preview, 0, Qt.AlignCenter)
+        v.addWidget(cp)
+
+    # ---- websocket server ----
+    def _build_websocket(self, v):
+        self._page_title(v, "WebSocket", "Stream input data to browser sources / other apps")
+
+        c = self._card()
+        f = QFormLayout(c); f.setContentsMargins(20, 18, 20, 18); f.setSpacing(14)
+        self.cb_ws = self._check("Enable WebSocket server", False, self._toggle_ws)
+        f.addRow(self.cb_ws)
+
+        self.le_ws_host = QLineEdit("0.0.0.0")
+        self.sp_ws_port = QSpinBox(); self.sp_ws_port.setRange(1024, 65535); self.sp_ws_port.setValue(16899)
+        f.addRow("Host", self.le_ws_host)
+        f.addRow("Port", self.sp_ws_port)
+
+        self.cb_ws_kb = self._check("Send keyboard events", True)
+        self.cb_ws_ms = self._check("Send mouse events", True)
+        self.cb_ws_gp = self._check("Send gamepad events", False)
+        f.addRow(self.cb_ws_kb)
+        f.addRow(self.cb_ws_ms)
+        f.addRow(self.cb_ws_gp)
+        v.addWidget(c)
+
+        # Status
+        cs = self._card()
+        sl = QVBoxLayout(cs); sl.setContentsMargins(18, 14, 18, 14); sl.setSpacing(8)
+        self._ws_status = QLabel("Server not running")
+        self._ws_status.setProperty("role", "hint")
+        sl.addWidget(self._ws_status)
+        hint = QLabel("Connect from a browser source: ws://localhost:16899")
+        hint.setProperty("role", "hint")
+        sl.addWidget(hint)
+        v.addWidget(cs)
+
+    # ---- presets (overlay layout presets) ----
+    def _build_presets(self, v):
+        self._page_title(v, "Presets", "Quick overlay layout configurations")
+        from .overlay_config import list_presets, load_preset, BUILTIN_PRESETS
+
+        c = self._card()
+        cl = QVBoxLayout(c); cl.setContentsMargins(18, 14, 18, 14); cl.setSpacing(8)
+        cl.addWidget(self._section("Built-in presets"))
+        for name in list_presets():
+            row = QFrame(); row.setProperty("card", True)
+            r = QHBoxLayout(row); r.setContentsMargins(16, 10, 16, 10)
+            rl = QVBoxLayout(); rl.setSpacing(2)
+            n = QLabel(name); n.setProperty("role", "section")
+            is_builtin = name in BUILTIN_PRESETS
+            d = QLabel("Built-in" if is_builtin else "Custom")
+            d.setProperty("role", "hint")
+            rl.addWidget(n); rl.addWidget(d)
+            r.addLayout(rl, 1)
+            load = QPushButton("Apply"); load.setProperty("accent", True)
+            load.clicked.connect(lambda _=False, nm=name: self._apply_preset(nm))
+            r.addWidget(load)
+            if not is_builtin:
+                delb = QPushButton("Delete"); delb.setProperty("ghost", True)
+                delb.clicked.connect(lambda _=False, nm=name: self._delete_preset(nm))
+                r.addWidget(delb)
+            cl.addWidget(row)
+        v.addWidget(c)
+
+    # ============================================================== new overlay handlers
+    def _toggle_mouse_overlay(self, checked: bool):
+        self.overlay.set_mouse_overlay(checked)
+        self._mark_dirty(True)
+
+    def _apply_mouse_sensitivity(self, val: int):
+        if self.overlay.mouse_overlay:
+            self.overlay.mouse_overlay.cfg.sensitivity = val / 100.0
+        self._mark_dirty(True)
+
+    def _apply_mouse_trail(self, val: int):
+        if self.overlay.mouse_overlay:
+            self.overlay.mouse_overlay.cfg.trail_length = val
+            self.overlay.mouse_overlay._trail = __import__('collections').deque(maxlen=val)
+        self._mark_dirty(True)
+
+    def _apply_mouse_deadzone(self, val: int):
+        if self.overlay.mouse_overlay:
+            self.overlay.mouse_overlay.cfg.deadzone_radius = val
+        self._mark_dirty(True)
+
+    def _apply_mouse_visual(self):
+        if self.overlay.mouse_overlay:
+            self.overlay.mouse_overlay.cfg.show_trail = self.cb_mo_trail.isChecked()
+            self.overlay.mouse_overlay.cfg.show_arrow = self.cb_mo_arrow.isChecked()
+            self.overlay.mouse_overlay.cfg.show_deadzone = self.cb_mo_deadzone_show.isChecked()
+        self._mark_dirty(True)
+
+    def _toggle_gamepad_overlay(self, checked: bool):
+        self.overlay.set_gamepad_overlay(checked)
+        self._mark_dirty(True)
+
+    def _toggle_ws(self, checked: bool):
+        if checked:
+            host = self.le_ws_host.text() or "0.0.0.0"
+            port = self.sp_ws_port.value()
+            ok = self.overlay.start_ws_server(host, port)
+            if ok:
+                self._ws_status.setText(f"Running on ws://{host}:{port}")
+                self._ws_status.setStyleSheet(f"color:{TOK['success']}; font-weight:500;")
+            else:
+                self._ws_status.setText("Failed to start — install 'websockets' package")
+                self._ws_status.setStyleSheet(f"color:{TOK['danger']}; font-weight:500;")
+        else:
+            self.overlay.stop_ws_server()
+            self._ws_status.setText("Server stopped")
+            self._ws_status.setStyleSheet(f"color:{TOK['secondary']};")
+        self._mark_dirty(True)
+
+    def _apply_preset(self, name: str):
+        from .overlay_config import load_preset
+        preset = load_preset(name)
+        if preset is None:
+            QMessageBox.warning(self, "Presets", f"Could not load preset '{name}'.")
+            return
+        # Apply preset settings
+        self.overlay.set_mouse_overlay(
+            preset.mouse.enabled, preset.mouse.x, preset.mouse.y, preset.mouse.size
+        )
+        self.overlay.set_gamepad_overlay(
+            preset.gamepad.enabled, preset.gamepad.x, preset.gamepad.y, preset.gamepad.size
+        )
+        if preset.websocket.enabled:
+            self.overlay.start_ws_server(preset.websocket.host, preset.websocket.port)
+        else:
+            self.overlay.stop_ws_server()
+        self._mark_dirty(True)
+        QMessageBox.information(self, "Presets", f"Applied preset '{name}'.")
+
+    def _delete_preset(self, name: str):
+        from .overlay_config import delete_preset
+        if delete_preset(name):
+            self._mark_dirty(True)
 
     # ============================================================== helpers
     def _card(self) -> QFrame:

@@ -10,7 +10,7 @@ corner radius) are applied here for real — there is no "display-only" state.
 """
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Optional
 
 from PySide6.QtCore import Qt, QPoint, QEvent
 from PySide6.QtWidgets import QApplication, QWidget
@@ -20,6 +20,9 @@ from . import platform_win
 from .input_listener import KeyListener, key_matches
 from .chibi_widget import ChibiWidget
 from .key_widget import KeyWidget
+from .mouse_overlay import MouseOverlay, MouseOverlayConfig
+from .gamepad_overlay import GamepadOverlay, GamepadConfig
+from .ws_server import InputWSServer
 
 
 # Map key tokens -> cat emotion reactions (Bongo's Cat style)
@@ -36,6 +39,10 @@ class OverlayWindow(QWidget):
         super().__init__()
         self.profile = profile
         self._key_widgets: Dict[str, KeyWidget] = {}
+        # Overlay layers
+        self.mouse_overlay: Optional[MouseOverlay] = None
+        self.gamepad_overlay: Optional[GamepadOverlay] = None
+        self.ws_server: Optional[InputWSServer] = None
 
         self._setup_window()
         self._build_widgets()
@@ -71,6 +78,19 @@ class OverlayWindow(QWidget):
             w = KeyWidget(kc, self, self.profile.key_theme)
             w.move(kc.x, kc.y)
             self._key_widgets[kc.key] = w
+
+        # Mouse movement overlay (hidden by default)
+        self.mouse_overlay = MouseOverlay(parent=self)
+        self.mouse_overlay.move(1600, 500)
+        self.mouse_overlay.hide()
+
+        # Gamepad overlay (hidden by default)
+        self.gamepad_overlay = GamepadOverlay(parent=self)
+        self.gamepad_overlay.move(1400, 600)
+        self.gamepad_overlay.hide()
+
+        # WebSocket server (not started by default)
+        self.ws_server = InputWSServer()
 
     def _apply_profile(self):
         self.set_enabled(self.profile.enabled)
@@ -124,6 +144,9 @@ class OverlayWindow(QWidget):
                 if emotion:
                     self.chibi.set_emotion(emotion, 2.5)
         self.chibi.pulse()
+        # Stream to WebSocket
+        if self.ws_server and self.ws_server.is_running:
+            self.ws_server.send_keyboard(token, "press")
 
     def handle_release(self, token: str):
         for kc in self.profile.keys:
@@ -131,6 +154,9 @@ class OverlayWindow(QWidget):
                 w = self._key_widgets.get(kc.key)
                 if w:
                     w.release()
+        # Stream to WebSocket
+        if self.ws_server and self.ws_server.is_running:
+            self.ws_server.send_keyboard(token, "release")
 
     def handle_click(self, name: str):
         pressed = not name.endswith("_release")
@@ -146,12 +172,28 @@ class OverlayWindow(QWidget):
             emotion = _KEY_EMOTIONS.get(base)
             if emotion:
                 self.chibi.set_emotion(emotion, 2.0)
+        # Update mouse overlay click flash
+        if self.mouse_overlay and self.mouse_overlay.isVisible():
+            if base == "mouse_left":
+                self.mouse_overlay.flash_left_click()
+            elif base == "mouse_right":
+                self.mouse_overlay.flash_right_click()
+        # Stream to WebSocket
+        if self.ws_server and self.ws_server.is_running:
+            btn = "left" if "left" in base else "right" if "right" in base else base
+            self.ws_server.send_mouse_click(btn, pressed)
 
     def handle_move(self, x: int, y: int):
         # Mouse tracking is a real toggle: when off, the chibi never reacts
         # to cursor movement (eyes/head/body stay centered).
         if self.profile.chibi.mouse_follow:
             self.chibi.set_mouse_global(x, y)
+        # Update mouse movement overlay
+        if self.mouse_overlay and self.mouse_overlay.isVisible():
+            self.mouse_overlay.set_mouse_global(x, y)
+        # Stream to WebSocket clients
+        if self.ws_server and self.ws_server.is_running:
+            self.ws_server.send_mouse_move(x, y)
 
     # ----------------------------------------------------------- click-through
     def _set_click_through(self, enabled: bool):
@@ -228,6 +270,42 @@ class OverlayWindow(QWidget):
         self.set_key_visuals(
             self.profile.key_scale, self.profile.key_opacity, self.profile.key_radius
         )
+
+    # ----------------------------------------------------------- overlay layers
+    def set_mouse_overlay(self, on: bool, x: int = 1600, y: int = 500, size: int = 200):
+        """Show/hide the mouse movement overlay."""
+        if self.mouse_overlay is None:
+            return
+        if on:
+            self.mouse_overlay.setFixedSize(size, size)
+            self.mouse_overlay.move(x, y)
+            self.mouse_overlay.show()
+        else:
+            self.mouse_overlay.hide()
+
+    def set_gamepad_overlay(self, on: bool, x: int = 1400, y: int = 600, size: int = 250):
+        """Show/hide the gamepad overlay."""
+        if self.gamepad_overlay is None:
+            return
+        if on:
+            self.gamepad_overlay.setFixedSize(size, size)
+            self.gamepad_overlay.move(x, y)
+            self.gamepad_overlay.show()
+        else:
+            self.gamepad_overlay.hide()
+
+    def start_ws_server(self, host: str = "0.0.0.0", port: int = 16899) -> bool:
+        """Start the WebSocket server for streaming input data."""
+        if self.ws_server is None:
+            return False
+        self.ws_server.host = host
+        self.ws_server.port = port
+        return self.ws_server.start()
+
+    def stop_ws_server(self):
+        """Stop the WebSocket server."""
+        if self.ws_server:
+            self.ws_server.stop()
 
     # ----------------------------------------------------------- edit mode
     def set_edit_mode(self, on: bool):
