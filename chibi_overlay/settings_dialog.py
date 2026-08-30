@@ -12,6 +12,7 @@ profile. The content panel scrolls so nothing is ever clipped at small sizes.
 from __future__ import annotations
 
 import os
+from collections import deque
 from typing import Optional
 
 from PySide6.QtCore import Qt, QRectF, QPointF
@@ -974,19 +975,18 @@ class SettingsWindow(FramelessWindow):
         self._mark_dirty(True)
 
     def _apply_mouse_sensitivity(self, val: int):
-        if self.overlay.mouse_overlay:
+        if self.overlay.mouse_overlay is not None:
             self.overlay.mouse_overlay.cfg.sensitivity = val / 100.0
         self._mark_dirty(True)
 
     def _apply_mouse_trail(self, val: int):
-        if self.overlay.mouse_overlay:
+        if self.overlay.mouse_overlay is not None:
             self.overlay.mouse_overlay.cfg.trail_length = val
-            from collections import deque
             self.overlay.mouse_overlay._trail = deque(maxlen=val)
         self._mark_dirty(True)
 
     def _apply_mouse_deadzone(self, val: int):
-        if self.overlay.mouse_overlay:
+        if self.overlay.mouse_overlay is not None:
             self.overlay.mouse_overlay.cfg.deadzone_radius = val
         self._mark_dirty(True)
 

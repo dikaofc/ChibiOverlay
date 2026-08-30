@@ -18,7 +18,7 @@ import os
 from typing import Optional
 
 from PySide6.QtCore import (
-    QRectF, QSize, Qt, QTimer, QPoint, QPointF, QElapsedTimer, QUrl,
+    QRectF, QSize, Qt, QTimer, QPoint, QElapsedTimer, QUrl,
 )
 from PySide6.QtGui import (
     QColor, QPainter, QPen, QBrush, QMovie, QPainterPath, QRadialGradient, QFont,
@@ -172,7 +172,6 @@ class ChibiWidget(QWidget):
 
     # ---------------------------------------------------------------- events
     def set_mouse_global(self, gx: int, gy: int):
-        self._mouse_global = QPointF(gx, gy)
         center = self.mapToGlobal(self.rect().center())
         dx = gx - center.x()
         dy = gy - center.y()
