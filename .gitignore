@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+profiles/
+smoke_err.log
+_sim.py
+_smoke.py
+_diag_ios.py
+*.log
+.claude/
