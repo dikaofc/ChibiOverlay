@@ -21,7 +21,7 @@ import time
 from typing import Optional
 
 from PySide6.QtCore import QTimer, Qt, QRectF
-from PySide6.QtGui import QColor, QPainter, QPen, QBrush, QFont, QLinearGradient, QPainterPath, QPixmap, QImage
+from PySide6.QtGui import QColor, QPainter, QPen, QBrush, QFont, QLinearGradient, QPainterPath
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QInputDialog
 
 from .models import KeyConfig
@@ -35,7 +35,7 @@ _BASE = 64
 
 
 class KeyWidget(QWidget):
-    def __init__(self, cfg: KeyConfig, parent: Optional[QWidget] = None, theme: str = "ink"):
+    def __init__(self, cfg: KeyConfig, parent: Optional[QWidget] = None, theme: str = "dark"):
         super().__init__(parent)
         self.cfg = cfg
         self._theme_name = theme

@@ -57,7 +57,8 @@ class OverlayWindow(QWidget):
         if screen:
             geo = screen.geometry()
         else:
-            geo = QApplication.primaryScreen().virtualGeometry()
+            from PySide6.QtCore import QRect
+            geo = QRect(0, 0, 1920, 1080)  # safe fallback
         self.setGeometry(geo)
         self.setWindowTitle("Chibi Overlay")
 
