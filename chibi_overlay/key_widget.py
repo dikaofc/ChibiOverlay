@@ -25,7 +25,7 @@ from PySide6.QtGui import QColor, QPainter, QPen, QBrush, QFont, QLinearGradient
 from PySide6.QtWidgets import QApplication, QWidget, QMenu, QInputDialog
 
 from .models import KeyConfig
-from .themes import get_theme, theme_names
+from .themes import get_theme
 
 _SIZE_PRESETS = [48, 56, 64, 72, 80, 96]
 

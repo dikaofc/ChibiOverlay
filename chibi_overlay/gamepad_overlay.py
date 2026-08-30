@@ -11,7 +11,6 @@ All drawn natively with QPainter — no external textures needed.
 """
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from typing import Optional, Dict
 

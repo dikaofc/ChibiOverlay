@@ -18,7 +18,7 @@ import json
 import os
 import sys
 from dataclasses import dataclass, field, asdict
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from .models import Profile
 

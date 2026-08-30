@@ -19,11 +19,10 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
-from PySide6.QtCore import Qt, QRect, QRectF, QPointF
+from PySide6.QtCore import Qt, QRect, QRectF
 from PySide6.QtGui import QColor, QPainter, QPixmap, QPen, QBrush, QFont
-from PySide6.QtWidgets import QApplication
 
 
 @dataclass

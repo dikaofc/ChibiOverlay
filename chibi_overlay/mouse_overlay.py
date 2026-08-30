@@ -16,7 +16,7 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Optional
 
-from PySide6.QtCore import Qt, QPoint, QPointF, QTimer, QRectF
+from PySide6.QtCore import Qt, QPoint, QPointF, QTimer
 from PySide6.QtGui import (
     QColor, QPainter, QPen, QBrush, QFont, QLinearGradient,
     QPainterPath, QRadialGradient,

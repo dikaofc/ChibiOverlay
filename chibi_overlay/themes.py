@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import math
 import re
-from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict
 

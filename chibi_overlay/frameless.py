@@ -8,8 +8,8 @@ Modern chromeless window with:
 """
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, QPoint, QRect, QSize
-from PySide6.QtGui import QPainter, QPen, QColor, QBrush, QPainterPath, QPixmap, QIcon
+from PySide6.QtCore import Qt, QPoint, QRect
+from PySide6.QtGui import QPainter, QPen, QColor, QBrush, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QFrame,
     QGraphicsDropShadowEffect,

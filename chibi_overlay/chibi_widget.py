@@ -24,7 +24,7 @@ from PySide6.QtGui import (
     QColor, QPainter, QPen, QBrush, QMovie, QPainterPath, QRadialGradient, QFont,
     QPixmap,
 )
-from PySide6.QtWidgets import QWidget, QLabel, QStackedWidget
+from PySide6.QtWidgets import QWidget, QLabel
 
 try:  # mp4 playback (QtMultimedia optional — absent on minimal builds)
     from PySide6.QtMultimedia import QMediaPlayer

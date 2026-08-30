@@ -28,7 +28,7 @@ from .models import KeyConfig, SUGGESTED_KEYS
 from . import config as cfg_mod
 from .overlay_window import OverlayWindow
 from .frameless import FramelessWindow
-from .themes import get_key_theme, get_theme, theme_names, contrast_color
+from .themes import get_key_theme, get_theme, theme_names
 from .characters import CHARACTERS, character_names
 from .key_widget import KeyWidget as kw
 from .chibi_widget import ChibiWidget

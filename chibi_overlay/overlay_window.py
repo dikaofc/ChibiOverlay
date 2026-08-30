@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Dict, Optional
 
-from PySide6.QtCore import Qt, QPoint, QEvent
+from PySide6.QtCore import Qt, QEvent
 from PySide6.QtWidgets import QApplication, QWidget
 
 from .models import Profile
@@ -20,8 +20,8 @@ from . import platform_win
 from .input_listener import KeyListener, key_matches
 from .chibi_widget import ChibiWidget
 from .key_widget import KeyWidget
-from .mouse_overlay import MouseOverlay, MouseOverlayConfig
-from .gamepad_overlay import GamepadOverlay, GamepadConfig
+from .mouse_overlay import MouseOverlay
+from .gamepad_overlay import GamepadOverlay
 from .ws_server import InputWSServer
 
 
