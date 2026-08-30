@@ -20,8 +20,7 @@ import sys
 from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, List, Optional
 
-from .models import Profile, KeyConfig, ChibiConfig
-from .sprite_sheet import SpriteConfig
+from .models import Profile
 
 
 # Where overlay presets live

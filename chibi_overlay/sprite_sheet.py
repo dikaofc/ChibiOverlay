@@ -21,8 +21,8 @@ import os
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
-from PySide6.QtCore import QRect, QRectF, QPointF
-from PySide6.QtGui import QColor, QPainter, QPixmap, QPen, QBrush, QFont, QImage
+from PySide6.QtCore import Qt, QRect, QRectF, QPointF
+from PySide6.QtGui import QColor, QPainter, QPixmap, QPen, QBrush, QFont
 from PySide6.QtWidgets import QApplication
 
 
@@ -214,7 +214,7 @@ class SpriteSheet:
             p.setPen(QPen(QColor(key.label_color)))
             font = QFont("Segoe UI", max(8, int(key.label_size * key.scale)), QFont.Bold)
             p.setFont(font)
-            p.drawText(dest, 0x0084, key.label)  # Qt.AlignCenter = 0x0084
+            p.drawText(dest, Qt.AlignCenter, key.label)
 
     def draw_all(
         self,
@@ -266,7 +266,7 @@ class SpriteSheet:
             p.setPen(QPen(QColor(key.label_color)))
             font = QFont("Segoe UI", max(8, int(key.label_size * key.scale)), QFont.Bold)
             p.setFont(font)
-            p.drawText(dest, 0x0084, key.label)
+            p.drawText(dest, Qt.AlignCenter, key.label)
 
 
 # ===================================================================

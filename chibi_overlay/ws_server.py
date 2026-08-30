@@ -22,7 +22,7 @@ from __future__ import annotations
 import json
 import time
 import threading
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Dict, Optional, Set
 
 try:
     import websockets

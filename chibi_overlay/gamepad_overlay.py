@@ -102,9 +102,14 @@ class GamepadOverlay(QWidget):
         self._t += 0.016
         # Slowly center sticks when no input
         decay = 0.92
-        self._left_stick = QPointF(self._left_stick.x() * decay, self._left_stick.y() * decay)
-        self._right_stick = QPointF(self._right_stick.x() * decay, self._right_stick.y() * decay)
-        self.update()
+        lx, ly = self._left_stick.x() * decay, self._left_stick.y() * decay
+        rx, ry = self._right_stick.x() * decay, self._right_stick.y() * decay
+        needs_update = (abs(lx) > 0.001 or abs(ly) > 0.001 or
+                        abs(rx) > 0.001 or abs(ry) > 0.001)
+        self._left_stick = QPointF(lx, ly)
+        self._right_stick = QPointF(rx, ry)
+        if needs_update:
+            self.update()
 
     def paintEvent(self, _event):
         p = QPainter(self)

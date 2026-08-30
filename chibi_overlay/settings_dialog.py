@@ -981,7 +981,8 @@ class SettingsWindow(FramelessWindow):
     def _apply_mouse_trail(self, val: int):
         if self.overlay.mouse_overlay:
             self.overlay.mouse_overlay.cfg.trail_length = val
-            self.overlay.mouse_overlay._trail = __import__('collections').deque(maxlen=val)
+            from collections import deque
+            self.overlay.mouse_overlay._trail = deque(maxlen=val)
         self._mark_dirty(True)
 
     def _apply_mouse_deadzone(self, val: int):
@@ -990,10 +991,11 @@ class SettingsWindow(FramelessWindow):
         self._mark_dirty(True)
 
     def _apply_mouse_visual(self):
-        if self.overlay.mouse_overlay:
+        if self.overlay.mouse_overlay is not None:
             self.overlay.mouse_overlay.cfg.show_trail = self.cb_mo_trail.isChecked()
             self.overlay.mouse_overlay.cfg.show_arrow = self.cb_mo_arrow.isChecked()
             self.overlay.mouse_overlay.cfg.show_deadzone = self.cb_mo_deadzone_show.isChecked()
+            self.overlay.mouse_overlay.update()
         self._mark_dirty(True)
 
     def _toggle_gamepad_overlay(self, checked: bool):
@@ -1011,6 +1013,9 @@ class SettingsWindow(FramelessWindow):
             else:
                 self._ws_status.setText("Failed to start — install 'websockets' package")
                 self._ws_status.setStyleSheet(f"color:{TOK['danger']}; font-weight:500;")
+                self.cb_ws.blockSignals(True)
+                self.cb_ws.setChecked(False)
+                self.cb_ws.blockSignals(False)
         else:
             self.overlay.stop_ws_server()
             self._ws_status.setText("Server stopped")

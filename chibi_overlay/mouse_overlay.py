@@ -126,22 +126,22 @@ class MouseOverlay(QWidget):
     def _tick(self):
         dt = 0.016
         self._t += dt
+        needs_update = False
 
         # Decay click flashes
         if self._left_flash > 0:
             self._left_flash = max(0, self._left_flash - dt / self.cfg.click_flash_duration)
+            needs_update = True
         if self._right_flash > 0:
             self._right_flash = max(0, self._right_flash - dt / self.cfg.click_flash_duration)
-
-        # Decay trail (fade older points)
-        if len(self._trail) > 3:
-            # Slowly remove old points
-            pass  # deque maxlen handles this
+            needs_update = True
 
         # Decay speed for arrow
-        self._speed *= 0.95
+        if self._speed > 0.5:
+            self._speed *= 0.95
+            needs_update = True
 
-        if self._left_flash > 0 or self._right_flash > 0 or self._speed > 0.5 or len(self._trail) > 0:
+        if needs_update:
             self.update()
 
     def paintEvent(self, _event):
@@ -226,7 +226,7 @@ class MouseOverlay(QWidget):
 
         p.end()
 
-    def move(self, x: int, y: int):
+    def set_position(self, x: int, y: int):
         """Position the overlay on screen."""
         self.cfg.x = x
         self.cfg.y = y
